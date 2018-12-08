@@ -24,8 +24,8 @@ const PageTemplate: React.FunctionComponent<PageTemplateProps> = ({ data }) => (
 export default PageTemplate
 
 export const query = graphql`
-  query PageTemplateQuery($filePath: String!) {
-    markdownRemark(fields: { filePath: { eq: $filePath } }) {
+  query PageTemplateQuery($slug: String!) {
+    markdownRemark(fields: { slug: { eq: $slug } }) {
       html
       excerpt
       frontmatter {

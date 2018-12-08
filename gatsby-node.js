@@ -6,25 +6,26 @@ Configure Gatsby to create pages from markdown files in ./src/markdownPages
 
 */
 
-const path = require('path')
+const pathUtil = require('path')
+const { createFilePath } = require('gatsby-source-filesystem')
 
-const MARKDOWN_PAGE_FOLDER = 'markdownPages'
 const MARKDOWN_PAGE_TEMPLATE = './src/components/MarkdownPage/index.tsx'
 
 exports.onCreateNode = ({ node, actions, getNode }) => {
   if (node.internal.type === 'MarkdownRemark') {
-    const filePath = `${getNode(node.parent).relativePath.replace('.md', '')}/`
+    const filePath = createFilePath({ node, getNode })
+    const slug = filePath.startsWith('/pages') ? filePath.replace('/pages', '/') : ''
 
     actions.createNodeField({
       node,
-      name: 'filePath',
-      value: filePath || ''
+      name: 'slug',
+      value: slug
     })
 
     actions.createNodeField({
       node,
       name: 'isPage',
-      value: filePath.startsWith(MARKDOWN_PAGE_FOLDER)
+      value: !!slug
     })
   }
 }
@@ -39,7 +40,7 @@ exports.createPages = async ({ graphql, actions }) => {
           node {
             fields {
               isPage
-              filePath
+              slug
             }
           }
         }
@@ -55,15 +56,15 @@ exports.createPages = async ({ graphql, actions }) => {
   allMarkdown.data.allMarkdownRemark.edges
     .filter(({ node }) => !!node.fields.isPage)
     .forEach(({ node }) => {
-      const { filePath } = node.fields
+      const { slug } = node.fields
 
       createPage({
-        path: filePath.replace(`${MARKDOWN_PAGE_FOLDER}/`, ''),
-        component: path.resolve(MARKDOWN_PAGE_TEMPLATE),
+        path: slug,
+        component: pathUtil.resolve(MARKDOWN_PAGE_TEMPLATE),
         context: {
           // Data passed to context is available in page queries as GraphQL
           // variables.
-          filePath
+          slug
         }
       })
     })
